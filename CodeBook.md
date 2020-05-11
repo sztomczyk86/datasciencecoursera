@@ -1,8 +1,8 @@
-==================================================================
+******************************************************************
     Getting and Cleaning Data Course Project by Szymon Tomczyk
                                using
       Human Activity Recognition Using Smartphones Dataset
-==================================================================
+******************************************************************
 
 The orignal data was split into two separate datasets "train" and "test" with 
 separate files providing information about the subject and the measured activity

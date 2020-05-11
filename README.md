@@ -1,8 +1,8 @@
-==================================================================
+******************************************************************
     Getting and Cleaning Data Course Project by Szymon Tomczyk
                                using
       Human Activity Recognition Using Smartphones Dataset
-==================================================================
+******************************************************************
 
 The following files were produced as part of the assignmetn:
 
