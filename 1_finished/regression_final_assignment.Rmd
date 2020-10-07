@@ -1,0 +1,109 @@
+---
+title: "Regression Final Assignment"
+author: "Szymon Tomczyk"
+date: "9/17/2020"
+output: pdf_document
+fontsize: 11pt
+geometry: margin=0.5in
+---
+
+## Summary
+In this assgnment we are supposed to analyse the relationsip between the mpg and other variables from the mtcars dataset. Using linear regression we should answer the following questions:
+1. Is an automatic or manual transmission better for MPG?
+2. What is the MPG difference between automatic and manual transmissions?
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(GGally)
+library(car)
+
+data(mtcars)
+```
+
+
+## Exploratory analysis
+After initial look at the data I noticed that all variables were loaded with the class "numeric". The variables cyl, vs, am, gear and carb were transformed into fators
+```{r echo = T, results = 'hide'}
+mtcars[,c(2, 8:11)] <- lapply(mtcars[,c(2, 8:11)], as.factor) 
+str(mtcars)
+```
+After looking at the results of two sample t-test comapring the mpg of cars with manual and automatic transmission the mean of two groups the H0 assuming the means in two groups are equal need to be rejected (p-value = 0.001374). This result shows promise for further analysis
+
+```{r echo=FALSE, fig.height = 2, fig.width = 3}
+mtcars %>% ggplot(aes(am, mpg)) +
+        geom_boxplot(aes(fill = am))
+```
+
+## Model selection
+To try to select the optimal model I first used all available variables as regressors of mpg. Afterwards, I used vif function to look for the variables that are strongly correlated and that contribute strongly to variance inflation. In the next step I made a model with only am as a regressor. Next I started to add variables expected to have strong influence on mpg that did not excessively contribute to variance inflation.
+```{r include=FALSE}
+fit1 <- lm(mpg ~ am, mtcars)
+fit2 <- lm(mpg ~ am + cyl + hp, mtcars)
+fit3 <- lm(mpg ~ am + cyl + hp + wt, mtcars)
+fit4 <- lm(mpg ~ am + cyl + hp + wt + vs, mtcars)
+fit5 <- lm(mpg ~ am + cyl + hp + wt + vs + gear, mtcars)
+fit6 <- lm(mpg ~ am + cyl + hp + wt + vs + gear + carb, mtcars)
+fit.all <- lm(mpg ~., mtcars)
+anova(fit1, fit2, fit3, fit4, fit5, fit6, fit.all)
+```
+The evaluation of the nested models shows that the optimal model seems to be the one including cyl, hp and wt in addition to the am as regressors. Adding additional variables does not seem to produce significantly better results (does not decrease the deviance much further). Thus the Model 3 was selected for further analysis.
+
+## Diagnostics
+Firstly, I verified that the residuals follow an approximately normal distribution using Shapiro-Wilk's normality test. The obtain results suggest that the distribution of residuals of the Model 3 was not significantly different from normal distribution.
+
+Next, I looked for influential outliers using 'influence.measures' function. This approach revealed 3 points that could potentially affect the model. However, removing them did not change the outcome of the analysis so decided to keep them in the final model (not shown here due to the volume constrains).
+
+Lasty, I looked at the diagnostic plots (i.e. residuals vs. fitted values) and did not notice any pattern in the the distribution of the residuals. 
+
+```{r echo=FALSE, fig.height = 2.5, fig.width = 3}
+plot(fit3, which=1)
+```
+
+## Conclusion
+When looking simply at the mean fuel consumption of cars with manual and automatic transmission it would seam that the manual cars consume less fuel (T-test). However, when a more complex linear multivariate model is build we can see that many more variables influence the mpg than just the type of transmission. In this analysis the selected optimal model seems to indicate a modest increase of 1.81 mpg in the cars with manual transmission. The p-value for this result is 0.21 so above the alpha = 0.05 , thus, we cannot conclude that there is a difference in fuel economy between automatic and manual transmissions. Further investigation of the confidence intervals shows that the 95% confidence interval for this coefficient is wide (-1.06 to 4.68) and contains zero. In the final conclusion, given the data we cannot reject H0 assuming equal consumption between manual and automatic transmission. 
+```{r}
+summary(fit3)$coef
+```
+
+
+# Apendix
+## Exploratory analysis
+### Structure of the data
+```{r}
+str(mtcars)
+```
+### T-test used for exploration
+```{r}
+t.test(mpg ~ am, mtcars)
+```
+
+## Model selection
+### Initial model evaluation
+```{r}
+vif(fit.all)
+```
+### Evaluation of the nested models
+```{r}
+anova(fit1, fit2, fit3, fit4, fit5, fit6, fit.all)
+```
+
+## Diagnostics
+### Assesment of normality of the distribution of residuals
+```{r}
+shapiro.test(fit3$residuals)
+```
+### Plots for model diagnostics
+```{r}
+par(mfrow = c(2,3))
+plot(fit3, which=1:6)
+```
+
+## Conclusion
+### Confidence intervals
+```{r}
+confint(fit3)
+```
+
+
+
+
+

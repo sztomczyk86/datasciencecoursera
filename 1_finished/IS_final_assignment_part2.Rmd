@@ -1,0 +1,65 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Statistical Inference Course Project Part 2
+_by Szymon Tomczyk_
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(datasets)
+```
+
+## Part 2 Basic Inferential Data Analysis
+_In this part we will use the ToothGrowth dataset studying the impact of dose and delivery method of Vitamin C on tooth growth in guiney pig. I will perform an exploratory analysis, look at the summary of the data and do some basic hyptotheis testing._
+
+### Loading the data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data("ToothGrowth")
+```
+
+### Exploratory analysis
+Look at the structure of the data and the summary statistics
+```{r}
+str(ToothGrowth)
+summary(ToothGrowth)
+```
+Plot of the Lenght of the odontoblasts by the method of delivery: VC - ascorbic acid, OJ - orange juice. 
+```{r}
+ggplot(ToothGrowth, aes(x = as.factor(dose), y = len)) +
+        geom_boxplot(aes(fill=supp)) +
+        scale_fill_manual(values=c("#56B4E9", "#E69F00"))+
+        facet_wrap(.~supp)+
+        labs(title = "Lenght of odontoblasts by the dose of Vitamic C") +
+        xlab("Dose (mg/day)") +
+        ylab("Length of odontoblasts") +
+        theme(legend.position = "none") 
+```
+
+### Hypothesis Testing
+
+Test if there is a difference in tooth growth between the group that was given ascorbic acid and orange juice.
+```{r}
+t.test(ToothGrowth$len ~ ToothGrowth$supp)
+```
+_The 95% confidence interval contains the difference between the means of two groups so we cannot reject the null hipothesis_
+ 
+Test if there is difference in tooth growth between the group that was given low (0.5) and high (2) dose of Vitamin C.
+```{r}
+ToothGrowth.sub <- filter(ToothGrowth, dose  %in% c(.5, 2))
+t.test(ToothGrowth.sub$len ~ ToothGrowth.sub$dose)
+```
+_The observed p-value is very low, much lower than alpha = 0.05. Based on this fact we cannot assume that the means of the populations are equal. We reject the null hypthesis_
+
+### Conclusions
+
+Given the data we analyzed we can conclude that:
+
+1. The method of delivery does not impact the tooth growth in guinea pig
+2. The dose impacts the tooth growth in guinea pig
+
+### Assumptions
+
+1. The samples come from independent identicaly distributed populations
+2. The samples are representative of the population

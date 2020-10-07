@@ -1,0 +1,166 @@
+---
+title: '*Reproducible Research Assignment 2*'
+output:
+  html_document:
+    df_print: paged
+---
+
+# Analysis of the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database-
+*In this analysis I am using the U.S. National Oceanic and Atmospheric Administration's (NOAA) data gathered between 1950 and 2011. The dataset contains information about major storms and weather events and their impact on human health and economy. The data will be used to determine which types of events coused the most catastrophic losses in human health and in the economy across the 62 years covered.*
+
+## 1. Data Processing
+### 1.1 Load libraries 
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+### 1.2 Loading data into R
+The following code will check if the file with the data already exists in your working directory. If it does not the file will be downloaded and unzipped. 
+
+```{r}
+if (!file.exists("storm.csv.bz2")) {
+        
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2","storm.csv.bz2")
+        
+}
+```
+Load the data into R and look at the data structure
+```{r, cache=TRUE}
+storm <- read.csv("storm.csv.bz2", header = TRUE)
+str(storm)
+```
+
+### 1.3 Cleaning and transforming the data to facilitate the analysis
+
+Select only variables that are neccessary for the further analysis
+```{r, cache=TRUE}
+storm %>% select(REFNUM, EVTYPE, FATALITIES:CROPDMGEXP) -> storm1
+```
+
+The naming of the events and exponents contain mistakes in spelling and have variability in upper and lower case way of writing. To minimize the variablity I transform all the variables to uppercase. For the multiplier of the cost of the damage only records with valid multipliers will be kept (no multiplier, K, M, B)
+
+```{r, cache=TRUE}
+
+storm1$EVTYPE <- toupper(storm1$EVTYPE)
+storm1$PROPDMGEXP <- toupper(storm1$PROPDMGEXP)
+storm1$CROPDMGEXP <- toupper(storm1$CROPDMGEXP)
+
+multiplier <- c("", "K", "M", "B")
+storm1 %>% filter(PROPDMGEXP %in% multiplier, 
+                  CROPDMGEXP %in% multiplier) -> storm2
+
+
+```
+
+The damage costs need to be unified to the same unit using the provided multiplie. K = 1000\$, M = 10^6^\$, B = 10^9^\$
+
+```{r, cache=TRUE}
+
+storm.spl <- split(storm2, storm2$PROPDMGEXP)
+
+as.data.frame(storm.spl[1]) %>% mutate(PROPCOST = PROPDMG) -> storm.spl0
+storm.spl$K %>% mutate(PROPCOST = PROPDMG*1000) -> storm.spl1
+storm.spl$M %>% mutate(PROPCOST = PROPDMG*10^6) -> storm.spl2
+storm.spl$B %>% mutate(PROPCOST = PROPDMG*10^9) -> storm.spl3
+
+storm3 <- bind_rows(storm.spl0, storm.spl1, storm.spl2, storm.spl3)
+
+storm.spl <- split(storm3, storm3$CROPDMGEXP)
+
+as.data.frame(storm.spl[1]) %>% mutate(CROPCOST = CROPDMG) -> storm.spl0
+storm.spl$K %>% mutate(CROPCOST = CROPDMG*1000) -> storm.spl1
+storm.spl$M %>% mutate(CROPCOST = CROPDMG*10^6) -> storm.spl2
+storm.spl$B %>% mutate(CROPCOST = CROPDMG*10^9) -> storm.spl3
+
+storm4 <- bind_rows(storm.spl0, storm.spl1, storm.spl2, storm.spl3)
+
+```
+The total losses to both crops and property as well as sum of injuries and fatalities need to be calculated to better understand the impact of the disasters on human life
+
+```{r}
+
+storm4 %>% mutate(PROP.CROP = (PROPCOST + CROPCOST), 
+                  FAT.INJ = (FATALITIES + INJURIES)) -> storm4
+
+```
+
+
+## 2. Results
+### 2.1 What is the type of event with the biggest impact on human health?
+Calculate the time span that the data covers
+```{r}
+timespan <- mdy_hms(storm$BGN_DATE)
+range(timespan)
+diff <- range(timespan)[2]-range(timespan)[1]
+as.duration(diff) / as.duration(years(1))
+```
+
+__Analysed data was collected during almost 62 year period from 1950 to 2011__
+  
+Calculate the total number of people injured or killed by a type of the event in the span of the 62 years.
+```{r}
+storm4 %>% group_by(EVTYPE) %>% summarise(sum.fatalities = sum(FATALITIES),
+                                          sum.injuries = sum(INJURIES),
+                                          sum.total = sum(FAT.INJ)) %>%
+        arrange(desc(sum.fatalities), desc(sum.total), 
+                desc(sum.injuries)) -> health
+head(health, 10)
+```
+Plot the top 10 types of events that had the highest impact of human health during the studied period.
+```{r}
+
+names(health)[2:4] <- c("Fatalities", "Injuries", "Total")
+health$EVTYPE <- factor(health$EVTYPE, levels = health$EVTYPE)
+
+pivot_longer(head(health, 10), -EVTYPE, names_to = "Type", 
+             values_to = "count") -> health.l
+
+ggplot(data = health.l, aes(EVTYPE, count)) +
+        geom_col(aes(fill = Type)) + 
+        xlab("Event Type")+
+        ylab("Number of People")+
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+        facet_wrap(.~ Type)
+
+```
+  
+  
+*__Event most harmful to the human health in terms of both fatalities and injuries in the 62 years during which the data were collected were tornados.__*
+
+### 2.1 What is the type of event with the biggest economic consequences?
+
+Calculate the total losses by the event type in the 62 years studdied
+```{r}
+
+storm4 %>% group_by(EVTYPE) %>% summarise(sum.prop = sum(PROPCOST),
+                                          sum.crop = sum(CROPCOST),
+                                          sum.total = sum(PROP.CROP)) %>%
+        arrange(desc(sum.total)) -> losses
+head(losses, 10)
+```
+Plot the top 10 types of events that caused the highest losses during the studied period.
+```{r}
+
+names(losses)[2:4] <- c("Property damage", "Crop damage", "Total")
+
+losses$EVTYPE <- factor(losses$EVTYPE, levels = losses$EVTYPE)
+
+pivot_longer(head(losses, 10), -EVTYPE, names_to = "Type", 
+             values_to = "count") -> losses.l
+ggplot(data = losses.l, aes(EVTYPE, count/10^9)) +
+        geom_col(aes(fill = Type)) + 
+        xlab("Event Type")+
+        ylab("Billions of Dollars")+
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+        facet_wrap(.~ Type)
+
+```
+
+*__Event causing the highest financial losses in the 62 years during which the data were collected were floods. However, events with causing the highest losses in crops were droughts.__*
+
+## 3. Take home message
+
+* __Events most harmful to human health were tornados__
+* __Events most harmful to economy were floods. However droughts caused most damage to crops__
+

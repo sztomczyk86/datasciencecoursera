@@ -1,0 +1,41 @@
+CR 18º 7d
+CR 10º 7d 1
+CR 10º 7d 2
+CR 10º 7d 3
+CS 18º 7d
+CS 10º 7d 1
+CS 10º 7d 2
+CS 10º 7d 3
+CR 18º 14d
+CR 10º 14d 1
+CR 10º 14d 2
+CR 10º 14d 3
+CS 18º 14d
+CS 10º 14d 1
+CS 10º 14d 2
+CS 10º 14d 3
+CR 18º 26d
+CR 10º 26d 2
+CR 10º 26d 3
+CS 18º 26d
+CS 10º 26d 1
+CS 10º 26d 2
+CS 10º 26d 3
+CR 18º 32d
+CR 10º 32d 1
+CR 10º 32d 2
+CR 10º 32d 3
+CS 18º 32d
+CS 10º 32d 1
+CS 10º 32d 2
+CS 10º 32d 3
+CR 10º 35d 1
+CR 10º 35d 2
+CR 10º 35d 3
+CS 10º 35d 1
+CS 10º 35d 2
+CS 10º 35d 3
+CS 18º 45d
+CS 10º 45d 1
+CS 10º 45d 2
+CS 10º 45d 3
