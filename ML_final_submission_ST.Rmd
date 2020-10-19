@@ -1,0 +1,102 @@
+---
+title: "ML final submission"
+author: "Szymon Tomczyk"
+date: "10/19/2020"
+output: html_document
+---
+
+# Prediction Assignment Writeup
+
+The goal of this assignment is to use machine learning algorithms to predict how well participants performed an exercise based on the data from accelerometers on the belt, forearm, arm, and dumbell. 
+
+The data for this project come from this source: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har.
+
+```{r include=FALSE}
+library(caret)
+library(tidyverse)
+```
+
+## Data import and cleaning
+```{r}
+train1 <- read.csv("pml-training.csv")
+test1 <- read.csv("pml-testing.csv")
+```
+```{r include=FALSE}
+m1 <- readRDS("MLF_m1.rds")
+m2 <- readRDS("MLF_m2.rds")
+m3 <- readRDS("MLF_m3.rds")
+```
+Before we begin building the model, we should take a brief look at the structure of the data. The output is not shown here due to the space constrains.
+```{r eval=FALSE, include=FALSE}
+str(train1)
+str(test1)
+```
+Upon investigation several problems with the data can be identified. Many of the variables have only missing values, others like timestamps are trated as integer variables. Finally, the classe variable that we want to predict is not a factor variable. To avoid those problem interfering with building the model, variables that are empty or not informative will be removed from the dataframe. 
+```{r}
+train1$classe <- factor(train1$classe)
+
+## identify empty variables and remove them from data frame
+empty.vars <- which(lapply(test1, function(x) sum(is.na(x)))==20)
+train.filtered <- train1[,-empty.vars]
+
+## remove other non informative variables
+train.filtered <- train.filtered[,8:60]
+```
+
+## Data partition and building the model
+As the provided dataset is quite large the most efficient way for cross validation seemed spliting the training set into training and validation dataset at 80% to 20% ratio.
+```{r}
+split1 <- createDataPartition(train.filtered$classe, p=0.8, list = F)
+
+train2 <- train.filtered[split1,]
+validate1 <- train.filtered[-split1,]
+```
+During the model building stage some pre processing steps like "center & scale" or PCA were tested. They did not strongly improve the accuracy of the model so for the sake of space only models without pre processing are presented in this report.
+
+### Choosing the model
+Initially I was planning to build 3 different models using random forest, boosting and LDA algorithms and use the majority voting to make the final predictions. 
+```{r eval=FALSE}
+m1 <- train(classe ~., data = train2, method = "rf", na.action = na.pass)
+m2 <- train(classe ~., data = train2, method = "gbm", na.action = na.pass)
+m3 <- train(classe ~., data = train2, method = "lda", na.action = na.pass)
+```
+The in sample accuracy of the three models was as follows:
+1. RF - 99.1%
+2. Gradient boosting - 95.7%
+3. Linear Discriminant Analysis - 69.8%
+
+As we can see the LDA model performed poorly even on the training sample. 
+
+## Cross validation and testing
+To test the 3 models I predicted the classe variable on the validation subsample and constructed the confusion matrices for all 3.
+```{r comment=""}
+v1 <- predict(m1, newdata = validate1)
+confusionMatrix(v1, validate1$classe)
+
+v2 <- predict(m2, newdata = validate1)
+confusionMatrix(v2, validate1$classe)
+
+v3 <- predict(m3, newdata = validate1)
+confusionMatrix(v3, validate1$classe)
+```
+The estimated out of sample accuracy based on the validation set was as follows:
+1. RF - 99.9%
+2. Gradient boosting - 97.1%
+3. Linear Discriminant Analysis - 71.1%
+
+As we can see model 1 and 3 perform much better than model 3. Given, that RF based model shows near 100% accuracy and LDA model performs rather poorly creating a combination of those 3 models to perform final prediction does not seem to make sense.
+
+All 3 models performed simiarily on the validation set as on the training set. The real out of sample error is likely larger since it tends to be under estimated when validated on the subset of the same sample that was used for training.
+
+Since the model using random forest showed the best performance it was selected to do the prediction on the test set.
+```{r comment=""}
+data.frame(case = c(1:20), result = predict(m1, test1))
+```
+__After submitting the results of the prediction on the 20 test cases the selected RF model accurately classified all of the 20 cases__
+
+## Summary
+Three models were build to predict how well the excercise was performed by test subjects. The model with the highest estimated accuracy was model 1 using random forest algorithm. It had 99.9% accuracy on the validation dataset and it correctly predicted 20 out of 20 test cases.
+
+
+
+

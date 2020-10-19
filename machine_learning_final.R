@@ -1,9 +1,12 @@
 library(caret)
 library(tidyverse)
-library(doParallel)
 
 train1 <- read.csv("pml-training.csv")
 test1 <- read.csv("pml-testing.csv")
+
+m1 <- readRDS("MLF_m1.rds")
+m2 <- readRDS("MLF_m2.rds")
+m3 <- readRDS("MLF_m3.rds")
 
 train1$classe <- factor(train1$classe)
 
@@ -18,22 +21,18 @@ train2 <- train.filtered[split1,]
 validate1 <- train.filtered[-split1,]
 
 
-#cl <- makePSOCKcluster(3)
-#registerDoParallel(cl)
-
-m1 <- train(classe ~., data = train2, method = "rf", na.action = na.pass)
+#m1 <- train(classe ~., data = train2, method = "rf", na.action = na.pass)
 #m1.pca <- train(classe ~., data = train2, method = "rf", 
 #                preProcess = "pca", na.action = na.pass)
 
-m2 <- train(classe ~., data = train2, method = "gbm", na.action = na.pass)
+#m2 <- train(classe ~., data = train2, method = "gbm", na.action = na.pass)
 # m2.pca <- train(classe ~., data = train2, method = "gbm", 
 #                 preProcess = "pca", na.action = na.pass)
 
-m3 <- train(classe ~., data = train2, method = "lda", na.action = na.pass)
+#m3 <- train(classe ~., data = train2, method = "lda", na.action = na.pass)
 # m3.pca <- train(classe ~., data = train2, method = "lda", 
 #                 preProcess = "pca", na.action = na.pass)
 
-# stopCluster(cl)
 
 v1 <- predict(m1, newdata = validate1)
 confusionMatrix(v1, validate1$classe)
@@ -49,7 +48,7 @@ confusionMatrix(v2, validate1$classe)
 # confusionMatrix(v2.pca, validate1$classe)
 
 v3 <- predict(m3, newdata = validate1)
-confusionMatrix(v3, validate1$classe)
+xx<-confusionMatrix(v3, validate1$classe)
 
 # v3.pca <- predict(m3.pca, newdata = validate1)
 # confusionMatrix(v3.pca, validate1$classe)
