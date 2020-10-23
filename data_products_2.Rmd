@@ -29,13 +29,8 @@ planets <- planets[!p2,]
 
 ## Plot of exoplanet's radius by its orbital period
 
-```{r echo=FALSE}
-plot1 <- ggplot(data = planets, aes(y = pl_rade, x=log10(pl_orbper)))+
-        geom_jitter(aes(color=disc_year, size = 0.001, alpha = 0.5)) + scale_color_viridis_d()+
-        labs(title = "Exoplanets radius by the orbital period") + 
-        xlab("Orbital period in log10(Days)")+
-        ylab("Exoplanet radious")
-
-ggplotly(plot1)
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+plot_ly(data = planets, y = planets$pl_rade, x=log10(planets$pl_orbper), 
+        color = planets$disc_year)
 ```
 

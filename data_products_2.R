@@ -23,5 +23,5 @@ plot1 <- ggplot(data = planets, aes(y = pl_rade, x=log10(pl_orbper)))+
 ggplotly(plot1)
 
 plot_ly(data = planets, y = planets$pl_rade, x=log10(planets$pl_orbper), 
-        color = planets$disc_year )
+        color = planets$disc_year)
 

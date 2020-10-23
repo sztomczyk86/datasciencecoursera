@@ -1,0 +1,39 @@
+---
+title: "Data products final presentation"
+author: "Szymon Tomczyk"
+date: "10/23/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+```{r include=FALSE}
+library(tidyverse)
+library(GGally)
+```
+
+## The "diamonds" R dataset
+This dataset contains the the prices and other attributes of almost 54,000 diamonds.
+```{r message=FALSE, warning=FALSE, comment=""}
+data(diamonds)
+head(diamonds)
+```
+My shiny app will use this dataset to visualise the relationship between various properties of the diamond and it's price as well as build a smimple linear model invosetigating the relationship between the price and other variables
+
+## A closer look at diamonds dataset and the variables used in the shiny app
+```{r include=FALSE}
+
+diamonds %>% select(price, carat:clarity) -> diamonds
+```
+```{r message=FALSE, warning=FALSE}
+ggpairs(diamonds)
+```
+
+## My shiny app looks like this
+```{r}
+knitr::include_url("https://sztomczyk86.shinyapps.io/data_products_final_v2_ST/")
+
+```
+
+## Thank you for cheking out my presentation
